@@ -1,0 +1,11 @@
+Textures:
+CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+Attribution: aristotle and VanessaE
+
+Code:
+License: MIT (https://opensource.org/licenses/MIT)
+By aristotle, a builder on the Red Cat Creative Server
+
+History:
+The concept and the original images come from VanessaE's
+dreambuilder_mp_extras mod deployed as part of the Dreambuilder modpack.
