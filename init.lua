@@ -1,5 +1,5 @@
 -- Minetest Mod: hotbar
---      Version: 0.1.1
+--      Version: 0.1.2
 --   Licence(s): see the attached license.txt file
 --       Author: aristotle, a builder on the Red Cat Creative Server
 --
