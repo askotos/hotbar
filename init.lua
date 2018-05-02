@@ -17,6 +17,13 @@
 --   the "hotbar_slots" key in the configuration file.
 --
 -- Changelog:
+--   0.1.2
+--   - Some of the existing textures have been modfied to comply with an even
+--     size (as recommended)
+--   - The missing textures have been added.
+--   - Some of the textures have been renamed to better support sorting.
+--   - As a consequence, the size range has been extended from [1,16] to the
+--     fully supported one [1,23]
 --   0.1.1
 --   - The code that did not properly show the error message when the
 --     received size was out of bounds has been corrected
@@ -34,15 +41,15 @@
 
 local hb = {}
 hb.min = 1
-hb.max = 16
+hb.max = 23
 hb.default = 16
 hb.setting ="hotbar_slots"
 hb.current = minetest.setting_get(hb.setting) or hb.default  -- The first time
 hb.image = {}
-hb.image.selected = "hotbar_slot_selected.png"
+hb.image.selected = "hotbar_selected_slot.png"
 hb.image.bg = {}
 for i = 1, hb.max do
-  table.insert(hb.image.bg, string.format("hotbar_slots_bg_%i.png", i))
+  table.insert(hb.image.bg, string.format("hotbar_slots_bg_%02i.png", i))
 end
 
 function hb.resize(size)
