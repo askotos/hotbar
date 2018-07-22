@@ -1,5 +1,5 @@
 -- Minetest Mod: hotbar
---      Version: 0.1.2
+--      Version: 0.1.3
 --   Licence(s): see the attached license.txt file
 --       Author: aristotle, a builder on the Red Cat Creative Server
 --
@@ -9,7 +9,7 @@
 --   hotbar [size]
 --
 -- By itself, hotbar types the hotbar slots number in the chat;
--- when it is followed by a number in the correct range that is now [1,16],
+-- when it is followed by a number in the correct range that is now [1,23],
 -- the command accordingly sets the new slots number.
 --
 -- Features:
@@ -17,8 +17,12 @@
 --   the "hotbar_slots" key in the configuration file.
 --
 -- Changelog:
+--   0.1.3
+--   - New update to assure the full API support because the version 0.1.2
+--     update seems to have gone wrong for some reason. (SORRY)
+--     The accepted slots number should now be in the range [1,23]!
 --   0.1.2
---   - Some of the existing textures have been modfied to comply with an even
+--   - Some of the existing textures have been modified to comply with an even
 --     size (as recommended)
 --   - The missing textures have been added.
 --   - Some of the textures have been renamed to better support sorting.
@@ -31,10 +35,6 @@
 --   - Some code optimization to avoid strings repetitions
 --   0.1.0
 --   - The hotbar is now correctly shown even when there are no items in it.
---
--- FYI
--- The potential range of the hotbar slots number should be [1,23]: the next
--- update will cover it too. :D
 --
 -- For now this is all folks: happy builds and explorations! :)
 -- aristotle
