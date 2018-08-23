@@ -274,8 +274,9 @@ hb.slots.set = function(name, slots)
     minetest.chat_send_player(name, string.upper(hb.mode.current) .. " mode is not managed yet!")
     return
   end
-
-  hb.slots.current = slots
+  if hb.mode.current ~= MODES.session then
+    hb.slots.current = slots
+  end
   minetest.chat_send_player(name, mask.set:format(slots))
 end
 
@@ -293,8 +294,9 @@ hb.mode.command = function(name, mode)
   
   if not minetest.is_singleplayer() or #mode == 0 then
     -- display current settings
-    minetest.chat_send_player(name, "[_] Hotbar slots: " .. hb.slots.current)
+    local player = minetest.get_player_by_name(name)
     minetest.chat_send_player(name, "[_] Hotbar mode: " .. string.upper(hb.mode.current))
+    minetest.chat_send_player(name, "[_] Hotbar slots: " .. player:hud_get_hotbar_itemcount())
     minetest.chat_send_player(name, "[_] Hotbar version: " .. VERSION)
     return
   end
@@ -349,6 +351,7 @@ minetest.register_chatcommand("hotbar", {
 	                            hb.slots.min + 1,
 	                            hb.slots.max),
 	func = hb.slots.command,
+	privs = {interact = true},
 })
 
 minetest.register_chatcommand("hotbar_mode", {
@@ -357,6 +360,7 @@ minetest.register_chatcommand("hotbar_mode", {
 	              "else it will change the mode to one of the supported " ..
 	              "ones: " .. stringified_table_keys(MODES, ", ") .. ".",
 	func = hb.mode.command,
+	privs = {interact = true},
 })
 
 minetest.log("action", "[MOD] hotbar v" .. VERSION .. " operating in " .. hb.mode.current .. " mode. Slots number is set to " .. hb.slots.current .. ".")
