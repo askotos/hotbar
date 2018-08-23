@@ -13,8 +13,8 @@
 -- the command accordingly sets the new slots number.
 --
 -- Features:
--- - It permanently stores the user's preference by setting and retrieving
---   the "hotbar_slots" key in the configuration file.
+-- - It may permanently store the user's preferences by setting & retrieving
+--   the "hotbar_slots" & "hotbar_mode" keys in the configuration file.
 -- - For those of us who are running MT 0.4.16+, the hotbar size may be
 --   different in each world / map.
 --
