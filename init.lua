@@ -1,7 +1,7 @@
 -- Minetest Mod: hotbar
 --      Version: 0.1.4
 --   Licence(s): see the attached license.txt file
---       Author: aristotle, a builder on the Red Cat Creative Server
+--       Author: aristotle, a builder on Red Cat Creative
 --
 -- This mod allows the player to set his/her own hotbar slots number
 -- by adding a new command.
