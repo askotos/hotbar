@@ -70,7 +70,7 @@
 
 local VERSION = "0.1.4"
 local MODES = {legacy = "legacy", world = "world", session = "session"} -- this redundancy simplifies later checks
-local DEFAULT = {mode = MODES.world, slots = {legacy = 16, world = 4, session = 23}}
+local DEFAULT = {mode = MODES.world, slots = {legacy = 16, world = 10, session = 12}}
 local MOD_STORAGE = {}
 if not minetest.get_mod_storage then
   -- MT < 0.4.16
