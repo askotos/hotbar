@@ -1,5 +1,5 @@
 -- Minetest Mod: hotbar
---      Version: 0.1.4
+--      Version: 0.1.5
 --   Licence(s): see the attached license.txt file
 --       Author: aristotle, a builder on Red Cat Creative
 --
@@ -19,6 +19,10 @@
 --   different in each world / map.
 --
 -- Changelog:
+--   0.1.5
+--   - Went back to just one command: hotbar, now improved to just not take
+--     the size, but the mode as well.
+--   - Some feedback messages have been fixed.
 --   0.1.4
 --   - A new command - /hotbar_mode - has been added to take advantage of
 --     the 0.4.16+ mod_storage API.
