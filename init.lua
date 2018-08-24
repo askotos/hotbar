@@ -76,15 +76,10 @@ if not minetest.get_mod_storage then
   -- MT < 0.4.16
   MOD_STORAGE.present = false
   MOD_STORAGE.settings = false
-  -- get_method = minetest.settings:get
-  -- set_method = minetest.settings:set -- automatically converted into a string
-                                        -- this is how it worked up to v0.1.3 included
 else
   -- MT 0.4.16+
   MOD_STORAGE.present = true
   MOD_STORAGE.settings = minetest.get_mod_storage()
-  -- get_method = ms:get_int
-  -- set_method = ms:set_int
 end
 
 
@@ -107,47 +102,26 @@ local new_masked_array = function(mask, max)
 end
 
 local read_mode = function(key, default_value)
-  -- returns one of the modes the array MODES contains
-  -- if requested and necessary, stores the default mode
-  local result
-  local value
-  if minetest.is_singleplayer() then
-    value = minetest.settings:get(key)
-    if type(value) == "string" then
-      if #value > 0 then
-        value = string.lower(value)
-        if not MODES[value] then
-          value = default_value
-        end
-      else
-        value = default_value
-      end
-    else
-      value = default_value
-    end
-  else
-    -- not singleplayer
-    value = MODES.session
+  if not minetest.is_singleplayer() then
+    return MODES.session
+  end
+  local value = minetest.settings:get(key)
+  if type(value) ~= "string" or #value == 0 then
+    return default_value
+  end
+  value = string.lower(value)
+  if not MODES[value] then
+    value = default_value
   end
   return value
 end
 
 local get_mode = function(storage, key, default_value)
-  -- returns a valid mode
-  -- if the requested one is wrong, it corrects it
-  local bool_to_string = function(value)
-    local rc = "false"
-    if value then
-      rc = "true"
-    end
-    return rc
+  if not minetest.is_singleplayer() then
+    return MODES.session
   end
-  
   local value = read_mode(key, default_value)
   local wrong = false
-  if not minetest.is_singleplayer() then
-    value = MODES.session
-  end
   if value == MODES.world then
     if not storage.present then
       value = MODES.legacy
