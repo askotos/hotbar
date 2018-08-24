@@ -326,43 +326,65 @@ hb.slots.command = function(name, slots)
 end
 
 hb.mode.command = function(name, mode)
-  local message
-  
-  if not core.is_singleplayer() or #mode == 0 then
+  local singleplayer = core.is_singleplayer()
+  local display_name = name
+  if singleplayer then
+    display_name = '_'
+  end  
+  local message = string.format("[%s] ", display_name)
+
+  if #mode == 0 then
     -- display current settings
     show_info({name = name, mode = hb.mode.current, wanted = {version = false, slots = true, mode = true}})
     return
   end
   
   mode = string.lower(mode)
-  if MODES[mode] then
-    if mode == MODES.legacy or mode == MODES.world or mode == MODES.session then
-      message = "Hotbar mode changed to " .. string.upper(mode) .. "."
-    else
-      -- This is wrong and must be logged for further investigation
-      message = "Your request to change the hotbar mode to " ..
-                string.upper(mode) .. " has been declined because it is unmanaged."
 
-      core.log("error", "[MOD] hotbar v" .. VERSION .. ": " .. message)
-      core.chat_send_player(name, "[_] " .. message)
+  if MODES[mode] then
+    if singleplayer then
+      if mode == MODES.legacy or mode == MODES.world or mode == MODES.session then
+        message = message .. "Hotbar mode changed to " .. string.upper(mode) .. "."
+      else
+        -- This is wrong and must be logged for further investigation
+        message = message .. "Your request to change the hotbar mode to " ..
+                  string.upper(mode) .. " has been declined because it is unmanaged."
+
+        core.log("error", "[MOD] hotbar v" .. VERSION .. ": " .. message)
+        core.chat_send_player(name, message)
+        return
+      end
+    else
+      -- not singleplayer
+      if mode ~= MODES.session then
+        message = message .. string.upper(mode) .. " mode cannot be set on a server."
+      else
+        message = message .. "Requesting to change mode and then trying to set the same one."
+      end
+      core.chat_send_player(name, message)
       return
     end
   else
     -- this might just be a mispelled mode, nothing to worry about:
     -- no log is required.
-    message = "[_] Wrong hotbar mode - " ..
+    message = message .. "Wrong hotbar mode - " ..
               string.upper(mode) .. " - specified."
     core.chat_send_player(name, message)
     return
   end
+  
+  if not singleplayer then
+    return
+  end
+  
   if mode == MODES.legacy or mode == MODES.world or mode == MODES.session then
     core.settings:set(hb.mode.key, mode)
   end
   hb.mode.current = mode
   hb.slots.current = get_and_set_initial_slots(MOD_STORAGE, hb.mode.current, hb.slots.key, DEFAULT.slots[hb.mode.current])
   hb.slots.set(name, hb.slots.current)
-  core.log("warning", "[MOD] hotbar v" .. VERSION .. ": [" .. name .. "] " .. message)
-  core.chat_send_player(name, "[_] " .. message)
+  core.log("warning", "[MOD] hotbar v" .. VERSION .. ": " .. message)
+  core.chat_send_player(name, message)
 end
 
 hb.on_joinplayer = function(player)
