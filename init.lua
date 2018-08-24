@@ -68,7 +68,7 @@
 -- For now this is all folks: happy builds and explorations! :)
 -- aristotle
 
-local VERSION = "0.1.4"
+local VERSION = "0.1.5"
 local MODES = {legacy = "legacy", world = "world", session = "session"} -- this redundancy simplifies later checks
 local DEFAULT = {mode = MODES.world, slots = {legacy = 16, world = 10, session = 12}}
 local MOD_STORAGE = {}
@@ -178,15 +178,18 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
   return current
 end
 
-local adjust_hotbar = function(name, slots, selected_image, bg_image)
+local adjust_hotbar = function(name, slots, selected_image, bg_image_getter)
   local player = core.get_player_by_name(name)
   if slots == 0 then
+    player:hud_set_hotbar_itemcount(1)
+    player:hud_set_hotbar_selected_image(selected_image)
+    player:hud_set_hotbar_image(bg_image_getter(1))
     player:hud_set_flags({hotbar = false, wielditem = false})
   else
-    player:hud_set_flags({hotbar = true, wielditem = true})
     player:hud_set_hotbar_itemcount(slots)
     player:hud_set_hotbar_selected_image(selected_image)
-    player:hud_set_hotbar_image(bg_image)
+    player:hud_set_hotbar_image(bg_image_getter(slots))
+    player:hud_set_flags({hotbar = true, wielditem = true})
   end
 end
 
@@ -207,18 +210,22 @@ hb.image.bg.get = function(slots)
 end
 
 hb.slots.set = function(name, slots)
-  local mask = {err = "[_] Wrong slots number specified: the %s accepted value is %i.",
-                set = "[_] Hotbar slots number set to %i."}
+  local mask = {err = "[%s] Wrong slots number specified: the %s accepted value is %i.",
+                set = "[%s] Hotbar slots number set to %i."}
+  local display_name = name
+  if minetest.is_singleplayer() then
+    display_name = '_'
+  end
   if slots < hb.slots.min then
-    core.chat_send_player(name, mask.err:format("minimum", hb.slots.min))
+    core.chat_send_player(name, mask.err:format(display_name, "minimum", hb.slots.min))
 	return
   end
   if slots > hb.slots.max then
-	core.chat_send_player(name, mask.err:format("maximum", hb.slots.max))
+	core.chat_send_player(name, mask.err:format(display_name, "maximum", hb.slots.max))
 	return
   end
   slots = math.floor(slots) -- to avoid fractions
-  hb.adjust(name, slots, hb.image.selected, hb.image.bg.get(slots))
+  hb.adjust(name, slots, hb.image.selected, hb.image.bg.get)
   
   if hb.mode.current == MODES.legacy then
     core.settings:set(hb.slots.key, slots)
@@ -251,16 +258,67 @@ hb.slots.set = function(name, slots)
   if hb.mode.current ~= MODES.session then
     hb.slots.current = slots
   end
-  core.chat_send_player(name, mask.set:format(slots))
+  core.chat_send_player(name, mask.set:format(display_name, slots))
+end
+
+show_info = function(arg)
+  normalize = function(request)
+    local rc = {mode = true, slots = true, version = true}
+    if type(request) ~= 'table' then
+      return rc
+    end 
+    for k, v in pairs(request) do
+      if k == 'mode' or k == 'slots' or k == 'version' then
+        if type(v) ~= 'boolean' then
+          rc[k] = false
+        else
+          rc[k] = v
+        end
+      end
+    end
+    return rc
+  end
+  
+  local player = core.get_player_by_name(arg.name)
+  local out_name = arg.name
+  local out_mode = string.upper(arg.mode)
+  if core.is_singleplayer() then
+    out_name = "_"  -- overridden
+  end
+  local message = string.format("[%s] ", out_name)
+  local slots = player:hud_get_hotbar_itemcount()
+  local flag = player:hud_get_flags()
+  if not flag.hotbar then
+    slots = 0
+  end
+  local wanted = normalize(arg.wanted)
+
+  if wanted.mode and wanted.slots then
+    message = message .. out_mode .. " / " .. slots
+    if wanted.version then
+      message = message .. " [" .. VERSION .. "]"
+    end
+  elseif wanted.mode then
+    message = message .. out_mode
+  elseif wanted.slots then
+    message = message .. slots
+  end
+  core.chat_send_player(arg.name, message)
 end
 
 hb.slots.command = function(name, slots)
-  local new_slots = tonumber(slots)
-  if not new_slots then
-    core.chat_send_player(name, "[_] Hotbar slots: " .. hb.slots.current)
+  if slots == nil then
+    show_info({name = name, mode = hb.mode.current, wanted = {version = false, slots = true}})
     return
   end
-  hb.slots.set(name, new_slots)
+
+  local new_slots = tonumber(slots)
+  if type(new_slots) == 'number' then
+    hb.slots.set(name, new_slots)
+  else
+    -- new_slots type is nil => is type string?
+    hb.mode.command(name, slots)
+  end
 end
 
 hb.mode.command = function(name, mode)
@@ -268,17 +326,14 @@ hb.mode.command = function(name, mode)
   
   if not core.is_singleplayer() or #mode == 0 then
     -- display current settings
-    local player = core.get_player_by_name(name)
-    core.chat_send_player(name, "[_] Hotbar mode: " .. string.upper(hb.mode.current))
-    core.chat_send_player(name, "[_] Hotbar slots: " .. player:hud_get_hotbar_itemcount())
-    core.chat_send_player(name, "[_] Hotbar version: " .. VERSION)
+    show_info({name = name, mode = hb.mode.current, wanted = {version = false, slots = true, mode = true}})
     return
   end
   
   mode = string.lower(mode)
   if MODES[mode] then
     if mode == MODES.legacy or mode == MODES.world or mode == MODES.session then
-      message = "hotbar mode changed to " .. string.upper(mode)
+      message = "Hotbar mode changed to " .. string.upper(mode) .. "."
     else
       -- This is wrong and must be logged for further investigation
       message = "Your request to change the hotbar mode to " ..
@@ -307,33 +362,34 @@ hb.mode.command = function(name, mode)
 end
 
 hb.on_joinplayer = function(player)
-  hb.adjust(player:get_player_name(), hb.slots.current, hb.image.selected, hb.image.bg.get(hb.slots.current))
+  hb.adjust(player:get_player_name(), hb.slots.current, hb.image.selected, hb.image.bg.get)
 end
 
 minetest.register_on_joinplayer(hb.on_joinplayer)
 
 minetest.register_chatcommand("hotbar", {
-  params = "[slots]",
-  description = string.format("If slots is not passed then it displays" ..
-                              " the current slots number, else if it is" ..
-                              " set to 0 then the hotbar gets hidden," ..
-                              " while any other value in the range " ..
-                              " [%i,%i] will show and accordingly " ..
-                              " resize the hotbar.",
-                              hb.slots.min + 1,
-                              hb.slots.max),
+  params = "[slots|mode]",
+  description = "Invoked with no argument, it displays" ..
+                " the current mode and slots number." ..
+                " To set" ..
+                " the slots number any integer in the range" ..
+                " [0, 23] is valid. If set to 0, the hotbar" ..
+                " gets hidden, any other number will unhide" ..
+                " it." ..
+                " Supported modes are " ..
+                stringified_table_keys(MODES, ", ") .. ".",
   func = hb.slots.command,
   privs = {interact = true},
 })
 
-minetest.register_chatcommand("hotbar_mode", {
-  params = "[mode]",
-  description = "If mode is not passed then it shows the current mode, " ..
-                "else it will change the mode to one of the supported " ..
-                "ones: " .. stringified_table_keys(MODES, ", ") .. ".",
-  func = hb.mode.command,
-  privs = {interact = true},
-})
+-- minetest.register_chatcommand("hotbar_mode", {
+--  params = "[mode]",
+--  description = "If mode is not passed then it shows the current mode, " ..
+--                "else it will change the mode to one of the supported " ..
+--                "ones: " .. stringified_table_keys(MODES, ", ") .. ".",
+--  func = hb.mode.command,
+--  privs = {interact = true},
+-- })
 
 core.log("action", "[MOD] hotbar v" .. VERSION .. " operating in " .. hb.mode.current .. " mode. Slots number is set to " .. hb.slots.current .. ".")
 
