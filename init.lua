@@ -19,11 +19,17 @@
 --   different in each world / map.
 --
 -- Changelog:
+--   0.1.5a
+--   - Running luacheck underlined that a couple of fixes were needed:
+--     1. normalize() scope is now local
+--     2. a few lines had their trailing blanks removed.
+--   - A couple of "security fixes" have been applied to disallow any
+--     floating value inside minetest.conf and the modstorage that might
+--     have made the mod fail at load time in legacy and world mode. 
 --   0.1.5
 --   - Went back to just one command: hotbar, now improved to just not take
 --     the size, but the mode as well.
 --   - Some feedback messages have been fixed.
---   - luacheck has been activated and a couple of fixes have followed. 
 --   0.1.4
 --   - A new command - /hotbar_mode - has been added to take advantage of
 --     the 0.4.16+ mod_storage API.
@@ -73,7 +79,7 @@
 -- For now this is all folks: happy builds and explorations! :)
 -- aristotle
 
-local VERSION = "0.1.5"
+local VERSION = "0.1.5a"
 local MODES = {legacy = "legacy", world = "world", session = "session"} -- this redundancy simplifies later checks
 local DEFAULT = {mode = MODES.world, slots = {legacy = 16, world = 10, session = 12}}
 local MOD_STORAGE = {}
