@@ -23,6 +23,7 @@
 --   - Went back to just one command: hotbar, now improved to just not take
 --     the size, but the mode as well.
 --   - Some feedback messages have been fixed.
+--   - luacheck has been activated and a couple of fixes have followed. 
 --   0.1.4
 --   - A new command - /hotbar_mode - has been added to take advantage of
 --     the 0.4.16+ mod_storage API.
@@ -153,15 +154,24 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
     local result = tonumber(core.settings:get(key))
     current = result or default_value  -- The first time
     if not result then
+      -- first time
       core.settings:set(key, current)
     else
-      current = math.floor(result)  -- fix result to current
+      current = math.floor(result)
+      if current ~= result then
+        -- result is a float
+        core.settings:set(key, current)
+      end
     end
 
   elseif mode_value == MODES.world then
     local result = core.deserialize(storage.settings:get_string(key))
     if type(result) == "number" then
-      current = result
+      current = math.floor(result)
+      if current ~= result then
+        -- result is a float
+        storage.settings:set_string(key, core.serialize(current))
+      end      
     else
       current = default_value -- The first time
       storage.settings:set_string(key, core.serialize(current))
