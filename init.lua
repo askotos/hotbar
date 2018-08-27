@@ -148,14 +148,14 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
   if not core.is_singleplayer() then
     mode_value = MODES.session
   end
-  
+
   if mode_value == MODES.legacy then
     local result = tonumber(core.settings:get(key))
     current = result or default_value  -- The first time
     if not result then
       core.settings:set(key, current)
     else
-      result = math.floor(result)
+      current = math.floor(result)  -- fix result to current
     end
 
   elseif mode_value == MODES.world then
@@ -166,10 +166,10 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
       current = default_value -- The first time
       storage.settings:set_string(key, core.serialize(current))
     end
-    
+
   elseif mode_value == MODES.session then
       current = default_value -- Session initial value
-  
+
   else
     current = default_value -- Unplanned case
     core.log("error",
@@ -178,7 +178,7 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
              " - is unmanaged and has been overridden and set to " ..
              string.upper(default_value) .. ".")
   end
-  
+
   return current
 end
 
@@ -205,7 +205,7 @@ hb.mode = { key = "hotbar_mode" }
 hb.slots = { key = "hotbar_slots", min = 0, max = 23 }
 hb.image = { selected = "hotbar_selected_slot.png", bg = {} }
 
-hb.mode.current = get_mode(MOD_STORAGE, hb.mode.key, DEFAULT.mode) 
+hb.mode.current = get_mode(MOD_STORAGE, hb.mode.key, DEFAULT.mode)
 hb.slots.current = get_and_set_initial_slots(MOD_STORAGE, hb.mode.current, hb.slots.key, DEFAULT.slots[hb.mode.current])
 hb.image.bg.array = new_masked_array("hotbar_slots_bg_%02i.png", hb.slots.max)
 
@@ -230,7 +230,7 @@ hb.slots.set = function(name, slots)
   end
   slots = math.floor(slots) -- to avoid fractions
   hb.adjust(name, slots, hb.image.selected, hb.image.bg.get)
-  
+
   if hb.mode.current == MODES.legacy then
     core.settings:set(hb.slots.key, slots)
   elseif hb.mode.current == MODES.world then
@@ -266,11 +266,11 @@ hb.slots.set = function(name, slots)
 end
 
 show_info = function(arg)
-  normalize = function(request)
+  local normalize = function(request)
     local rc = {mode = true, slots = true, version = true}
     if type(request) ~= 'table' then
       return rc
-    end 
+    end
     for k, v in pairs(request) do
       if k == 'mode' or k == 'slots' or k == 'version' then
         if type(v) ~= 'boolean' then
@@ -282,7 +282,7 @@ show_info = function(arg)
     end
     return rc
   end
-  
+
   local player = core.get_player_by_name(arg.name)
   local out_name = arg.name
   local out_mode = string.upper(arg.mode)
@@ -330,7 +330,7 @@ hb.mode.command = function(name, mode)
   local display_name = name
   if singleplayer then
     display_name = '_'
-  end  
+  end
   local message = string.format("[%s] ", display_name)
 
   if #mode == 0 then
@@ -338,7 +338,7 @@ hb.mode.command = function(name, mode)
     show_info({name = name, mode = hb.mode.current, wanted = {version = false, slots = true, mode = true}})
     return
   end
-  
+
   mode = string.lower(mode)
 
   if MODES[mode] then
@@ -372,16 +372,19 @@ hb.mode.command = function(name, mode)
     core.chat_send_player(name, message)
     return
   end
-  
+
   if not singleplayer then
     return
   end
-  
+
   if mode == MODES.legacy or mode == MODES.world or mode == MODES.session then
     core.settings:set(hb.mode.key, mode)
   end
   hb.mode.current = mode
-  hb.slots.current = get_and_set_initial_slots(MOD_STORAGE, hb.mode.current, hb.slots.key, DEFAULT.slots[hb.mode.current])
+  hb.slots.current = get_and_set_initial_slots(MOD_STORAGE,
+                                               hb.mode.current,
+                                               hb.slots.key,
+                                               DEFAULT.slots[hb.mode.current])
   hb.slots.set(name, hb.slots.current)
   core.log("warning", "[MOD] hotbar v" .. VERSION .. ": " .. message)
   core.chat_send_player(name, message)
@@ -417,5 +420,7 @@ minetest.register_chatcommand("hotbar", {
 --  privs = {interact = true},
 -- })
 
-core.log("action", "[MOD] hotbar v" .. VERSION .. " operating in " .. hb.mode.current .. " mode. Slots number is set to " .. hb.slots.current .. ".")
+core.log("action",
+         "[MOD] hotbar v" .. VERSION .. " operating in " .. hb.mode.current ..
+         " mode. Slots number is set to " .. hb.slots.current .. ".")
 
