@@ -1,5 +1,5 @@
 -- Minetest Mod: hotbar
---      Version: 0.1.5
+--      Version: 0.1.5a
 --   Licence(s): see the attached license.txt file
 --       Author: aristotle, a builder on Red Cat Creative
 --
@@ -9,7 +9,7 @@
 --   hotbar [size]
 --
 -- By itself, hotbar types the hotbar slots number in the chat;
--- when it is followed by a number in the correct range that is now [1,23],
+-- when it is followed by a number in the correct range that is now [0,23],
 -- the command accordingly sets the new slots number.
 --
 -- Features:
@@ -25,7 +25,7 @@
 --     2. a few lines had their trailing blanks removed.
 --   - A couple of "security fixes" have been applied to disallow any
 --     floating value inside minetest.conf and the modstorage that might
---     have made the mod fail at load time in legacy and world mode. 
+--     have made the mod fail at load time in legacy and world mode.
 --   0.1.5
 --   - Went back to just one command: hotbar, now improved to just not take
 --     the size, but the mode as well.
@@ -154,6 +154,7 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
   local current
   if not core.is_singleplayer() then
     mode_value = MODES.session
+    default_value = DEFAULT.slots[mode_value]
   end
 
   if mode_value == MODES.legacy then
@@ -177,7 +178,7 @@ local get_and_set_initial_slots = function(storage, mode_value, key, default_val
       if current ~= result then
         -- result is a float
         storage.settings:set_string(key, core.serialize(current))
-      end      
+      end
     else
       current = default_value -- The first time
       storage.settings:set_string(key, core.serialize(current))
@@ -262,7 +263,7 @@ hb.slots.set = function(name, slots)
       -- and trying different hotbar modes.
       -- As a commodity, singleplayer can override the default value to get it back
       -- if he/she switched back from another mode during the same session.
-      -- This does not have to happen on a server to avoid that other players
+      -- This has not to happen on a server to avoid that other players
       -- overrided it or that their default / current value might be overridden by
       -- others.
       DEFAULT.slots[hb.mode.current] = slots
@@ -426,15 +427,6 @@ minetest.register_chatcommand("hotbar", {
   func = hb.slots.command,
   privs = {interact = true},
 })
-
--- minetest.register_chatcommand("hotbar_mode", {
---  params = "[mode]",
---  description = "If mode is not passed then it shows the current mode, " ..
---                "else it will change the mode to one of the supported " ..
---                "ones: " .. stringified_table_keys(MODES, ", ") .. ".",
---  func = hb.mode.command,
---  privs = {interact = true},
--- })
 
 core.log("action",
          "[MOD] hotbar v" .. VERSION .. " operating in " .. hb.mode.current ..
